@@ -125,7 +125,7 @@ public class TestJoinStatsRule
                                     INNER,
                                     pb.values(leftJoinColumnSymbol, leftOtherColumnSymbol),
                                     pb.values(rightJoinColumnSymbol, rightOtherColumnSymbol),
-                                    new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol), new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol));
+                                    new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol, Comparison.Operator.EQUAL), new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol, Comparison.Operator.EQUAL));
                         })
                 .withSourceStats(0, LEFT_STATS)
                 .withSourceStats(1, RIGHT_STATS)
@@ -151,7 +151,7 @@ public class TestJoinStatsRule
                     INNER,
                     pb.values(leftJoinColumnSymbol, leftJoinColumnSymbol2),
                     pb.values(rightJoinColumnSymbol, rightJoinColumnSymbol2),
-                    new EquiJoinClause(leftJoinColumnSymbol2, rightJoinColumnSymbol2), new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol));
+                    new EquiJoinClause(leftJoinColumnSymbol2, rightJoinColumnSymbol2, Comparison.Operator.EQUAL), new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol, Comparison.Operator.EQUAL));
         };
 
         // LEFT_JOIN_COLUMN_2 = RIGHT_JOIN_COLUMN_2 is the more selective clause
@@ -201,7 +201,7 @@ public class TestJoinStatsRule
                                     INNER,
                                     pb.values(leftJoinColumnSymbol, leftJoinColumnSymbol2),
                                     pb.values(rightJoinColumnSymbol, rightJoinColumnSymbol2),
-                                    ImmutableList.of(new EquiJoinClause(leftJoinColumnSymbol2, rightJoinColumnSymbol2), new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol)),
+                                    ImmutableList.of(new EquiJoinClause(leftJoinColumnSymbol2, rightJoinColumnSymbol2, Comparison.Operator.EQUAL), new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol, Comparison.Operator.EQUAL)),
                                     ImmutableList.of(leftJoinColumnSymbol, leftJoinColumnSymbol2),
                                     ImmutableList.of(rightJoinColumnSymbol, rightJoinColumnSymbol2),
                                     Optional.of(leftJoinColumnLessThanTen));
@@ -220,7 +220,7 @@ public class TestJoinStatsRule
                 LEFT_OTHER_COLUMN_STATS);
         PlanNodeStatsEstimate actual = JOIN_STATS_RULE.calculateJoinComplementStats(
                 Optional.empty(),
-                ImmutableList.of(new EquiJoinClause(new Symbol(DOUBLE, LEFT_JOIN_COLUMN), new Symbol(DOUBLE, RIGHT_JOIN_COLUMN))),
+                ImmutableList.of(new EquiJoinClause(new Symbol(DOUBLE, LEFT_JOIN_COLUMN), new Symbol(DOUBLE, RIGHT_JOIN_COLUMN), Comparison.Operator.EQUAL)),
                 LEFT_STATS,
                 RIGHT_STATS);
         Assertions.assertThat(actual).isEqualTo(expected);
@@ -236,7 +236,7 @@ public class TestJoinStatsRule
                         RIGHT_OTHER_COLUMN_STATS));
         PlanNodeStatsEstimate actual = JOIN_STATS_RULE.calculateJoinComplementStats(
                 Optional.empty(),
-                ImmutableList.of(new EquiJoinClause(new Symbol(DOUBLE, RIGHT_JOIN_COLUMN), new Symbol(DOUBLE, LEFT_JOIN_COLUMN))),
+                ImmutableList.of(new EquiJoinClause(new Symbol(DOUBLE, RIGHT_JOIN_COLUMN), new Symbol(DOUBLE, LEFT_JOIN_COLUMN), Comparison.Operator.EQUAL)),
                 RIGHT_STATS,
                 LEFT_STATS);
         Assertions.assertThat(actual).isEqualTo(expected);
@@ -264,7 +264,7 @@ public class TestJoinStatsRule
                 .mapOutputRowCount(rowCount -> rowCount / UNKNOWN_FILTER_COEFFICIENT);
         PlanNodeStatsEstimate actual = JOIN_STATS_RULE.calculateJoinComplementStats(
                 Optional.empty(),
-                ImmutableList.of(new EquiJoinClause(new Symbol(DOUBLE, LEFT_JOIN_COLUMN), new Symbol(DOUBLE, RIGHT_JOIN_COLUMN)), new EquiJoinClause(new Symbol(DOUBLE, LEFT_OTHER_COLUMN), new Symbol(DOUBLE, RIGHT_OTHER_COLUMN))),
+                ImmutableList.of(new EquiJoinClause(new Symbol(DOUBLE, LEFT_JOIN_COLUMN), new Symbol(DOUBLE, RIGHT_JOIN_COLUMN), Comparison.Operator.EQUAL), new EquiJoinClause(new Symbol(DOUBLE, LEFT_OTHER_COLUMN), new Symbol(DOUBLE, RIGHT_OTHER_COLUMN), Comparison.Operator.EQUAL)),
                 LEFT_STATS,
                 RIGHT_STATS);
         Assertions.assertThat(actual).isEqualTo(expected);
@@ -388,7 +388,7 @@ public class TestJoinStatsRule
                             joinType,
                             pb.values(leftJoinColumnSymbol, leftOtherColumnSymbol),
                             pb.values(rightJoinColumnSymbol, rightOtherColumnSymbol),
-                            new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol));
+                            new EquiJoinClause(leftJoinColumnSymbol, rightJoinColumnSymbol, Comparison.Operator.EQUAL));
         }).withSourceStats(0, leftStats)
                 .withSourceStats(1, rightStats)
                 .check(JOIN_STATS_RULE, stats -> stats.equalTo(resultStats));

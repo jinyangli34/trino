@@ -983,11 +983,13 @@ class RelationPlanner
             rightPlanBuilder = rightCoercions.getSubPlan();
 
             for (int i = 0; i < leftComparisonExpressions.size(); i++) {
-                if (joinConditionComparisonOperators.get(i) == io.trino.sql.tree.ComparisonExpression.Operator.EQUAL) {
+                if (joinConditionComparisonOperators.get(i) == io.trino.sql.tree.ComparisonExpression.Operator.EQUAL ||
+                        joinConditionComparisonOperators.get(i) == io.trino.sql.tree.ComparisonExpression.Operator.IS_NOT_DISTINCT_FROM) {
                     Symbol leftSymbol = leftCoercions.get(leftComparisonExpressions.get(i));
                     Symbol rightSymbol = rightCoercions.get(rightComparisonExpressions.get(i));
+                    Comparison.Operator operator = joinConditionComparisonOperators.get(i) == io.trino.sql.tree.ComparisonExpression.Operator.IS_NOT_DISTINCT_FROM ? IDENTICAL : EQUAL;
 
-                    equiClauses.add(new JoinNode.EquiJoinClause(leftSymbol, rightSymbol));
+                    equiClauses.add(new JoinNode.EquiJoinClause(leftSymbol, rightSymbol, operator));
                 }
                 else {
                     postInnerJoinConditions.add(translateComparison(
@@ -1087,6 +1089,7 @@ class RelationPlanner
             case GREATER_THAN -> new Comparison(GREATER_THAN, left.toSymbolReference(), right.toSymbolReference());
             case GREATER_THAN_OR_EQUAL -> new Comparison(GREATER_THAN_OR_EQUAL, left.toSymbolReference(), right.toSymbolReference());
             case IS_DISTINCT_FROM -> not(plannerContext.getMetadata(), new Comparison(IDENTICAL, left.toSymbolReference(), right.toSymbolReference()));
+            case IS_NOT_DISTINCT_FROM -> new Comparison(IDENTICAL, left.toSymbolReference(), right.toSymbolReference());
         };
     }
 
@@ -1147,7 +1150,7 @@ class RelationPlanner
             rightCoercions.put(rightOutput, new Cast(right.getSymbol(rightField).toSymbolReference(), type));
             rightJoinColumns.put(identifier, rightOutput);
 
-            clauses.add(new JoinNode.EquiJoinClause(leftOutput, rightOutput));
+            clauses.add(new JoinNode.EquiJoinClause(leftOutput, rightOutput, EQUAL));
         }
 
         ProjectNode leftCoercion = new ProjectNode(idAllocator.getNextId(), left.getRoot(), leftCoercions.build());

@@ -16,6 +16,7 @@ package io.trino.sql.planner.optimizations.joins;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.ir.Expression;
 import io.trino.sql.planner.PlanNodeIdAllocator;
 import io.trino.sql.planner.Symbol;
@@ -181,8 +182,8 @@ public class JoinGraph
 
             PlanNode left = context.getSymbolSource(leftSymbol);
             PlanNode right = context.getSymbolSource(rightSymbol);
-            edges.put(left.getId(), new Edge(right, leftSymbol, rightSymbol));
-            edges.put(right.getId(), new Edge(left, rightSymbol, leftSymbol));
+            edges.put(left.getId(), new Edge(right, leftSymbol, rightSymbol, edge.getOperator()));
+            edges.put(right.getId(), new Edge(left, rightSymbol, leftSymbol, edge.getOperator()));
         }
 
         return new JoinGraph(nodes, edges.build(), newRoot, joinedFilters, this.containsCrossJoin || containsCrossJoin);
@@ -275,12 +276,14 @@ public class JoinGraph
         private final PlanNode targetNode;
         private final Symbol sourceSymbol;
         private final Symbol targetSymbol;
+        private final Comparison.Operator operator;
 
-        public Edge(PlanNode targetNode, Symbol sourceSymbol, Symbol targetSymbol)
+        public Edge(PlanNode targetNode, Symbol sourceSymbol, Symbol targetSymbol, Comparison.Operator operator)
         {
             this.targetNode = requireNonNull(targetNode, "targetNode is null");
             this.sourceSymbol = requireNonNull(sourceSymbol, "sourceSymbol is null");
             this.targetSymbol = requireNonNull(targetSymbol, "targetSymbol is null");
+            this.operator = requireNonNull(operator, "operator is null");
         }
 
         public PlanNode getTargetNode()
@@ -296,6 +299,11 @@ public class JoinGraph
         public Symbol getTargetSymbol()
         {
             return targetSymbol;
+        }
+
+        public Comparison.Operator getOperator()
+        {
+            return operator;
         }
     }
 

@@ -422,7 +422,7 @@ public class ReorderJoins
         {
             Symbol leftSymbol = Symbol.from(equality.left());
             Symbol rightSymbol = Symbol.from(equality.right());
-            EquiJoinClause equiJoinClause = new EquiJoinClause(leftSymbol, rightSymbol);
+            EquiJoinClause equiJoinClause = new EquiJoinClause(leftSymbol, rightSymbol, EQUAL);
             return leftSymbols.contains(leftSymbol) ? equiJoinClause : equiJoinClause.flip();
         }
 

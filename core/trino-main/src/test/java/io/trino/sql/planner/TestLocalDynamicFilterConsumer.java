@@ -21,6 +21,7 @@ import io.airlift.units.DataSize;
 import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
 import io.trino.spi.predicate.ValueSet;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.planner.OptimizerConfig.JoinDistributionType;
 import io.trino.sql.planner.OptimizerConfig.JoinReorderingStrategy;
 import io.trino.sql.planner.assertions.BasePlanTest;
@@ -241,9 +242,9 @@ public class TestLocalDynamicFilterConsumer
                 planBuilder.values(left1, left2, left3),
                 planBuilder.values(right1, right2, right3),
                 ImmutableList.of(
-                        new EquiJoinClause(left1, right1),
-                        new EquiJoinClause(left2, right2),
-                        new EquiJoinClause(left3, right3)),
+                        new EquiJoinClause(left1, right1, Comparison.Operator.EQUAL),
+                        new EquiJoinClause(left2, right2, Comparison.Operator.EQUAL),
+                        new EquiJoinClause(left3, right3, Comparison.Operator.EQUAL)),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 Optional.empty(),

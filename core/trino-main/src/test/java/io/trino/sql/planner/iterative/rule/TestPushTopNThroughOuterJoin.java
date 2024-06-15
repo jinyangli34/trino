@@ -14,6 +14,7 @@
 package io.trino.sql.planner.iterative.rule;
 
 import com.google.common.collect.ImmutableList;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.planner.Symbol;
 import io.trino.sql.planner.iterative.rule.test.BaseRuleTest;
 import io.trino.sql.planner.plan.JoinNode;
@@ -49,7 +50,7 @@ public class TestPushTopNThroughOuterJoin
                                     LEFT,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new JoinNode.EquiJoinClause(leftKey, rightKey)));
+                                    new JoinNode.EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .matches(
                         join(LEFT, builder -> builder
@@ -73,7 +74,7 @@ public class TestPushTopNThroughOuterJoin
                                     RIGHT,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new JoinNode.EquiJoinClause(leftKey, rightKey)));
+                                    new JoinNode.EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .matches(
                         join(RIGHT, builder -> builder
@@ -97,7 +98,7 @@ public class TestPushTopNThroughOuterJoin
                                     FULL,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new JoinNode.EquiJoinClause(leftKey, rightKey)));
+                                    new JoinNode.EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
 
@@ -113,7 +114,7 @@ public class TestPushTopNThroughOuterJoin
                                     FULL,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new JoinNode.EquiJoinClause(leftKey, rightKey)));
+                                    new JoinNode.EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
     }
@@ -133,7 +134,7 @@ public class TestPushTopNThroughOuterJoin
                                     FULL,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new JoinNode.EquiJoinClause(leftKey, rightKey)));
+                                    new JoinNode.EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
     }
@@ -153,7 +154,7 @@ public class TestPushTopNThroughOuterJoin
                                     LEFT,
                                     p.limit(1, p.values(5, leftKey)),
                                     p.values(5, rightKey),
-                                    new JoinNode.EquiJoinClause(leftKey, rightKey)));
+                                    new JoinNode.EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
     }
@@ -173,7 +174,7 @@ public class TestPushTopNThroughOuterJoin
                                     FULL,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new JoinNode.EquiJoinClause(leftKey, rightKey)));
+                                    new JoinNode.EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
     }

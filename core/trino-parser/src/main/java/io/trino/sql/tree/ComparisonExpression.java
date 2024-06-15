@@ -32,7 +32,8 @@ public class ComparisonExpression
         LESS_THAN_OR_EQUAL("<="),
         GREATER_THAN(">"),
         GREATER_THAN_OR_EQUAL(">="),
-        IS_DISTINCT_FROM("IS DISTINCT FROM");
+        IS_DISTINCT_FROM("IS DISTINCT FROM"),
+        IS_NOT_DISTINCT_FROM("IS NOT DISTINCT FROM");
 
         private final String value;
 
@@ -56,6 +57,7 @@ public class ComparisonExpression
                 case GREATER_THAN -> LESS_THAN;
                 case GREATER_THAN_OR_EQUAL -> LESS_THAN_OR_EQUAL;
                 case IS_DISTINCT_FROM -> IS_DISTINCT_FROM;
+                case IS_NOT_DISTINCT_FROM -> IS_NOT_DISTINCT_FROM;
             };
         }
 
@@ -75,6 +77,7 @@ public class ComparisonExpression
                 case GREATER_THAN_OR_EQUAL:
                     return LESS_THAN;
                 case IS_DISTINCT_FROM:
+                case IS_NOT_DISTINCT_FROM:
                     // Cannot negate
                     break;
             }

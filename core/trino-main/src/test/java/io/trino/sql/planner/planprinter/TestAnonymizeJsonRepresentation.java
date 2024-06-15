@@ -28,6 +28,7 @@ import io.trino.spi.connector.TestingColumnHandle;
 import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
 import io.trino.spi.predicate.ValueSet;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.ir.Reference;
 import io.trino.sql.planner.PlanNodeIdAllocator;
 import io.trino.sql.planner.Symbol;
@@ -140,7 +141,7 @@ public class TestAnonymizeJsonRepresentation
                         INNER,
                         pb.values(pb.symbol("a", BIGINT), pb.symbol("b", BIGINT)),
                         pb.values(pb.symbol("c", BIGINT), pb.symbol("d", BIGINT)),
-                        ImmutableList.of(new JoinNode.EquiJoinClause(pb.symbol("a", BIGINT), pb.symbol("d", BIGINT))),
+                        ImmutableList.of(new JoinNode.EquiJoinClause(pb.symbol("a", BIGINT), pb.symbol("d", BIGINT), Comparison.Operator.EQUAL)),
                         ImmutableList.of(pb.symbol("b", BIGINT)),
                         ImmutableList.of(),
                         Optional.empty(),

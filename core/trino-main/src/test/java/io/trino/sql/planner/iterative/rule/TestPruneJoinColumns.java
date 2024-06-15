@@ -16,6 +16,7 @@ package io.trino.sql.planner.iterative.rule;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.ir.Reference;
 import io.trino.sql.planner.Symbol;
 import io.trino.sql.planner.iterative.rule.test.BaseRuleTest;
@@ -109,7 +110,7 @@ public class TestPruneJoinColumns
                         INNER,
                         p.values(leftKey, leftValue),
                         p.values(rightKey, rightValue),
-                        ImmutableList.of(new JoinNode.EquiJoinClause(leftKey, rightKey)),
+                        ImmutableList.of(new JoinNode.EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)),
                         leftOutputs,
                         rightOutputs,
                         Optional.empty(),

@@ -19,6 +19,7 @@ import com.google.common.primitives.ImmutableLongArray;
 import io.airlift.units.DataSize;
 import io.trino.Session;
 import io.trino.execution.scheduler.faulttolerant.OutputStatsEstimator;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.planner.OptimizerConfig;
 import io.trino.sql.planner.Symbol;
 import io.trino.sql.planner.assertions.BasePlanTest;
@@ -111,7 +112,7 @@ public class TestAdaptivePartitioning
                                                 .equiCriteria(ImmutableList.of(aliases ->
                                                         new JoinNode.EquiJoinClause(
                                                                 new Symbol(BIGINT, "suppkey"),
-                                                                new Symbol(BIGINT, "nationkey"))))
+                                                                new Symbol(BIGINT, "nationkey"), Comparison.Operator.EQUAL)))
                                                 .left(node(AdaptivePlanNode.class,
                                                         remoteSource(ImmutableList.of(new PlanFragmentId("4")))))
                                                 // validate no partitionCount in local exchange

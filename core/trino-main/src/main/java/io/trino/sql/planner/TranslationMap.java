@@ -565,6 +565,7 @@ public class TranslationMap
             case GREATER_THAN -> new Comparison(GREATER_THAN, left, right);
             case GREATER_THAN_OR_EQUAL -> new Comparison(GREATER_THAN_OR_EQUAL, left, right);
             case IS_DISTINCT_FROM -> not(plannerContext.getMetadata(), new Comparison(IDENTICAL, left, right));
+            case IS_NOT_DISTINCT_FROM -> new Comparison(IDENTICAL, left, right);
         };
     }
 

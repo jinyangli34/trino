@@ -710,8 +710,8 @@ public class TestEffectivePredicateExtractor
     public void testInnerJoin()
     {
         ImmutableList.Builder<JoinNode.EquiJoinClause> criteriaBuilder = ImmutableList.builder();
-        criteriaBuilder.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d")));
-        criteriaBuilder.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "b"), new Symbol(BIGINT, "e")));
+        criteriaBuilder.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d"), Comparison.Operator.EQUAL));
+        criteriaBuilder.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "b"), new Symbol(BIGINT, "e"), Comparison.Operator.EQUAL));
         List<JoinNode.EquiJoinClause> criteria = criteriaBuilder.build();
 
         Map<Symbol, ColumnHandle> leftAssignments = Maps.filterKeys(scanAssignments, Predicates.in(ImmutableList.of(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "b"), new Symbol(BIGINT, "c"))));
@@ -779,7 +779,7 @@ public class TestEffectivePredicateExtractor
                 JoinType.INNER,
                 left,
                 rightScan,
-                ImmutableList.of(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d"))),
+                ImmutableList.of(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d"), Comparison.Operator.EQUAL)),
                 ImmutableList.of(),
                 rightScan.getOutputSymbols(),
                 false,
@@ -810,7 +810,7 @@ public class TestEffectivePredicateExtractor
                 JoinType.INNER,
                 leftScan,
                 rightScan,
-                ImmutableList.of(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d"))),
+                ImmutableList.of(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d"), Comparison.Operator.EQUAL)),
                 leftScan.getOutputSymbols(),
                 rightScan.getOutputSymbols(),
                 false,
@@ -847,8 +847,8 @@ public class TestEffectivePredicateExtractor
                 left,
                 right,
                 ImmutableList.of(
-                        new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d")),
-                        new JoinNode.EquiJoinClause(new Symbol(BIGINT, "b"), new Symbol(BIGINT, "e"))),
+                        new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d"), Comparison.Operator.EQUAL),
+                        new JoinNode.EquiJoinClause(new Symbol(BIGINT, "b"), new Symbol(BIGINT, "e"), Comparison.Operator.EQUAL)),
                 left.getOutputSymbols(),
                 right.getOutputSymbols(),
                 false,
@@ -875,7 +875,7 @@ public class TestEffectivePredicateExtractor
     @Test
     public void testLeftJoinWithFalseInner()
     {
-        List<JoinNode.EquiJoinClause> criteria = ImmutableList.of(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d")));
+        List<JoinNode.EquiJoinClause> criteria = ImmutableList.of(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d"), Comparison.Operator.EQUAL));
 
         Map<Symbol, ColumnHandle> leftAssignments = Maps.filterKeys(scanAssignments, Predicates.in(ImmutableList.of(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "b"), new Symbol(BIGINT, "c"))));
         TableScanNode leftScan = tableScanNode(leftAssignments);
@@ -920,8 +920,8 @@ public class TestEffectivePredicateExtractor
     public void testRightJoin()
     {
         ImmutableList.Builder<JoinNode.EquiJoinClause> criteriaBuilder = ImmutableList.builder();
-        criteriaBuilder.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d")));
-        criteriaBuilder.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "b"), new Symbol(BIGINT, "e")));
+        criteriaBuilder.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d"), Comparison.Operator.EQUAL));
+        criteriaBuilder.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "b"), new Symbol(BIGINT, "e"), Comparison.Operator.EQUAL));
         List<JoinNode.EquiJoinClause> criteria = criteriaBuilder.build();
 
         Map<Symbol, ColumnHandle> leftAssignments = Maps.filterKeys(scanAssignments, Predicates.in(ImmutableList.of(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "b"), new Symbol(BIGINT, "c"))));
@@ -973,7 +973,7 @@ public class TestEffectivePredicateExtractor
     @Test
     public void testRightJoinWithFalseInner()
     {
-        List<JoinNode.EquiJoinClause> criteria = ImmutableList.of(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d")));
+        List<JoinNode.EquiJoinClause> criteria = ImmutableList.of(new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "d"), Comparison.Operator.EQUAL));
 
         Map<Symbol, ColumnHandle> leftAssignments = Maps.filterKeys(scanAssignments, Predicates.in(ImmutableList.of(new Symbol(BIGINT, "a"), new Symbol(BIGINT, "b"), new Symbol(BIGINT, "c"))));
         TableScanNode leftScan = tableScanNode(leftAssignments);

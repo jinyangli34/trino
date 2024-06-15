@@ -13,6 +13,7 @@
  */
 package io.trino.sql.planner.assertions;
 
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.planner.plan.JoinNode;
 
 import static java.util.Objects.requireNonNull;
@@ -32,7 +33,7 @@ class EquiJoinClauseProvider
     @Override
     public JoinNode.EquiJoinClause getExpectedValue(SymbolAliases aliases)
     {
-        return new JoinNode.EquiJoinClause(left.toSymbol(aliases), right.toSymbol(aliases));
+        return new JoinNode.EquiJoinClause(left.toSymbol(aliases), right.toSymbol(aliases), Comparison.Operator.EQUAL);
     }
 
     @Override

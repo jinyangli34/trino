@@ -336,12 +336,15 @@ public class JoinNode
     {
         private final Symbol left;
         private final Symbol right;
+        private final Comparison.Operator operator;
 
         @JsonCreator
-        public EquiJoinClause(@JsonProperty("left") Symbol left, @JsonProperty("right") Symbol right)
+        public EquiJoinClause(@JsonProperty("left") Symbol left, @JsonProperty("right") Symbol right, @JsonProperty("operator") Comparison.Operator operator)
         {
+            checkArgument(operator == Comparison.Operator.EQUAL || operator == Comparison.Operator.IDENTICAL, "operator must be EQUAL or IDENTICAL");
             this.left = requireNonNull(left, "left is null");
             this.right = requireNonNull(right, "right is null");
+            this.operator = requireNonNull(operator, "operator is null");
         }
 
         @JsonProperty("left")
@@ -356,14 +359,20 @@ public class JoinNode
             return right;
         }
 
+        @JsonProperty("operator")
+        public Comparison.Operator getOperator()
+        {
+            return operator;
+        }
+
         public Comparison toExpression()
         {
-            return new Comparison(Comparison.Operator.EQUAL, left.toSymbolReference(), right.toSymbolReference());
+            return new Comparison(operator, left.toSymbolReference(), right.toSymbolReference());
         }
 
         public EquiJoinClause flip()
         {
-            return new EquiJoinClause(right, left);
+            return new EquiJoinClause(right, left, operator);
         }
 
         @Override
@@ -380,19 +389,20 @@ public class JoinNode
             EquiJoinClause other = (EquiJoinClause) obj;
 
             return Objects.equals(this.left, other.left) &&
-                    Objects.equals(this.right, other.right);
+                    Objects.equals(this.right, other.right) &&
+                    this.operator == other.operator;
         }
 
         @Override
         public int hashCode()
         {
-            return Objects.hash(left, right);
+            return Objects.hash(left, right, operator);
         }
 
         @Override
         public String toString()
         {
-            return format("%s = %s", left, right);
+            return format("%s %s %s", left, operator.name(), right);
         }
     }
 }

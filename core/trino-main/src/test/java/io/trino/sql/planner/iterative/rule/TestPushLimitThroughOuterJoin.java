@@ -14,6 +14,7 @@
 package io.trino.sql.planner.iterative.rule;
 
 import com.google.common.collect.ImmutableList;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.planner.Symbol;
 import io.trino.sql.planner.iterative.rule.test.BaseRuleTest;
 import io.trino.sql.planner.plan.JoinNode.EquiJoinClause;
@@ -41,7 +42,7 @@ public class TestPushLimitThroughOuterJoin
                                     LEFT,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new EquiJoinClause(leftKey, rightKey)));
+                                    new EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .matches(
                         limit(1,
@@ -63,7 +64,7 @@ public class TestPushLimitThroughOuterJoin
                                     RIGHT,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new EquiJoinClause(leftKey, rightKey)));
+                                    new EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .matches(
                         limit(1,
@@ -85,7 +86,7 @@ public class TestPushLimitThroughOuterJoin
                                     FULL,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new EquiJoinClause(leftKey, rightKey)));
+                                    new EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
     }
@@ -102,7 +103,7 @@ public class TestPushLimitThroughOuterJoin
                                     LEFT,
                                     p.limit(1, p.values(5, leftKey)),
                                     p.values(5, rightKey),
-                                    new EquiJoinClause(leftKey, rightKey)));
+                                    new EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
     }
@@ -121,7 +122,7 @@ public class TestPushLimitThroughOuterJoin
                                     LEFT,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new EquiJoinClause(leftKey, rightKey)));
+                                    new EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
     }
@@ -141,7 +142,7 @@ public class TestPushLimitThroughOuterJoin
                                     LEFT,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new EquiJoinClause(leftKey, rightKey)));
+                                    new EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
 
@@ -157,7 +158,7 @@ public class TestPushLimitThroughOuterJoin
                                     LEFT,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new EquiJoinClause(leftKey, rightKey)));
+                                    new EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .matches(
                         limit(1, ImmutableList.of(), false, ImmutableList.of("leftKey"),
@@ -182,7 +183,7 @@ public class TestPushLimitThroughOuterJoin
                                     RIGHT,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new EquiJoinClause(leftKey, rightKey)));
+                                    new EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .doesNotFire();
 
@@ -198,7 +199,7 @@ public class TestPushLimitThroughOuterJoin
                                     RIGHT,
                                     p.values(5, leftKey),
                                     p.values(5, rightKey),
-                                    new EquiJoinClause(leftKey, rightKey)));
+                                    new EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)));
                 })
                 .matches(
                         limit(1, ImmutableList.of(), false, ImmutableList.of("rightKey"),

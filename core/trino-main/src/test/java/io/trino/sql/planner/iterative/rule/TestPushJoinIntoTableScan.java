@@ -172,7 +172,7 @@ public class TestPushJoinIntoTableScan
                                     joinType,
                                     left,
                                     right,
-                                    new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol));
+                                    new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol, Comparison.Operator.EQUAL));
                         }
                         return p.join(
                                 joinType,
@@ -316,7 +316,7 @@ public class TestPushJoinIntoTableScan
                                 INNER,
                                 left,
                                 right,
-                                new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol));
+                                new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol, Comparison.Operator.EQUAL));
                     })
                     .doesNotFire();
         }
@@ -355,7 +355,7 @@ public class TestPushJoinIntoTableScan
                                 INNER,
                                 left,
                                 right,
-                                new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol));
+                                new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol, Comparison.Operator.EQUAL));
                     })
                     .doesNotFire();
         }
@@ -394,7 +394,7 @@ public class TestPushJoinIntoTableScan
                                 INNER,
                                 left,
                                 right,
-                                new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol));
+                                new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol, Comparison.Operator.EQUAL));
                     })
                     .doesNotFire();
         }
@@ -434,7 +434,7 @@ public class TestPushJoinIntoTableScan
                                 joinType,
                                 left,
                                 right,
-                                new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol));
+                                new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol, Comparison.Operator.EQUAL));
                     })
                     .matches(
                             project(
@@ -573,7 +573,7 @@ public class TestPushJoinIntoTableScan
                                     INNER,
                                     left,
                                     right,
-                                    new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol));
+                                    new JoinNode.EquiJoinClause(columnA1Symbol, columnB1Symbol, Comparison.Operator.EQUAL));
                         })
                         .matches(anyTree());
             })

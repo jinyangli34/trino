@@ -160,7 +160,7 @@ public class TestJsonRepresentation
                         INNER,
                         pb.values(pb.symbol("a", BIGINT), pb.symbol("b", BIGINT)),
                         pb.values(pb.symbol("c", BIGINT), pb.symbol("d", BIGINT)),
-                        ImmutableList.of(new JoinNode.EquiJoinClause(pb.symbol("a", BIGINT), pb.symbol("d", BIGINT))),
+                        ImmutableList.of(new JoinNode.EquiJoinClause(pb.symbol("a", BIGINT), pb.symbol("d", BIGINT), Comparison.Operator.EQUAL)),
                         ImmutableList.of(pb.symbol("b", BIGINT)),
                         ImmutableList.of(),
                         Optional.of(new Comparison(LESS_THAN, new Reference(BIGINT, "a"), new Reference(BIGINT, "c"))),

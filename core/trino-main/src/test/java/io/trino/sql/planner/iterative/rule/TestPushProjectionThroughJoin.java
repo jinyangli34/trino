@@ -20,6 +20,7 @@ import io.trino.metadata.ResolvedFunction;
 import io.trino.metadata.TestingFunctionResolution;
 import io.trino.spi.function.OperatorType;
 import io.trino.sql.ir.Call;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.ir.Reference;
 import io.trino.sql.planner.Plan;
 import io.trino.sql.planner.PlanNodeIdAllocator;
@@ -89,7 +90,7 @@ public class TestPushProjectionThroughJoin
                                                 .build(),
                                         p.values(a0, a1))),
                         p.values(b0, b1),
-                        new JoinNode.EquiJoinClause(a1, b1)));
+                        new JoinNode.EquiJoinClause(a1, b1, Comparison.Operator.EQUAL)));
 
         Session session = testSessionBuilder().build();
         Optional<PlanNode> rewritten = pushProjectionThroughJoin(planNode, noLookup(), idAllocator);
@@ -101,7 +102,7 @@ public class TestPushProjectionThroughJoin
                 node -> unknown(),
                 new Plan(rewritten.get(), empty()), noLookup(),
                 join(INNER, builder -> builder
-                        .equiCriteria(ImmutableList.of(aliases -> new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a1"), new Symbol(BIGINT, "b1"))))
+                        .equiCriteria(ImmutableList.of(aliases -> new JoinNode.EquiJoinClause(new Symbol(BIGINT, "a1"), new Symbol(BIGINT, "b1"), Comparison.Operator.EQUAL)))
                         .left(
                                 strictProject(ImmutableMap.of(
                                                 "a3", expression(new Call(NEGATION_BIGINT, ImmutableList.of(new Call(NEGATION_BIGINT, ImmutableList.of(new Reference(BIGINT, "a0")))))),

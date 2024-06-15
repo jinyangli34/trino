@@ -109,7 +109,7 @@ public class TestPruneJoinChildrenColumns
                 INNER,
                 p.values(leftKey, leftKeyHash, leftValue),
                 p.values(rightKey, rightKeyHash, rightValue),
-                ImmutableList.of(new JoinNode.EquiJoinClause(leftKey, rightKey)),
+                ImmutableList.of(new JoinNode.EquiJoinClause(leftKey, rightKey, Comparison.Operator.EQUAL)),
                 leftOutputs.stream()
                         .filter(joinOutputFilter)
                         .collect(toImmutableList()),

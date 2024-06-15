@@ -19,6 +19,7 @@ import io.trino.Session;
 import io.trino.matching.Capture;
 import io.trino.matching.Captures;
 import io.trino.matching.Pattern;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.ir.Expression;
 import io.trino.sql.planner.Symbol;
 import io.trino.sql.planner.iterative.Rule;
@@ -134,7 +135,7 @@ public class TransformFilteringSemiJoinToInnerJoin
                 INNER,
                 semiJoin.getSource(),
                 filteringSourceDistinct,
-                ImmutableList.of(new EquiJoinClause(semiJoin.getSourceJoinSymbol(), semiJoin.getFilteringSourceJoinSymbol())),
+                ImmutableList.of(new EquiJoinClause(semiJoin.getSourceJoinSymbol(), semiJoin.getFilteringSourceJoinSymbol(), Comparison.Operator.EQUAL)),
                 semiJoin.getSource().getOutputSymbols(),
                 ImmutableList.of(),
                 false,

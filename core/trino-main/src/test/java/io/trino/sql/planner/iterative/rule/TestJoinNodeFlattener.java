@@ -434,7 +434,7 @@ public class TestJoinNodeFlattener
 
     private EquiJoinClause equiJoinClause(Symbol symbol1, Symbol symbol2)
     {
-        return new EquiJoinClause(symbol1, symbol2);
+        return new EquiJoinClause(symbol1, symbol2, Comparison.Operator.EQUAL);
     }
 
     private PlanBuilder planBuilder(PlanNodeIdAllocator planNodeIdAllocator)

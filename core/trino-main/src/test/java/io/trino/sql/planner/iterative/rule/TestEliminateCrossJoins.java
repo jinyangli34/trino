@@ -19,6 +19,7 @@ import io.trino.metadata.ResolvedFunction;
 import io.trino.metadata.TestingFunctionResolution;
 import io.trino.spi.function.OperatorType;
 import io.trino.sql.ir.Call;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.ir.Expression;
 import io.trino.sql.ir.Reference;
 import io.trino.sql.planner.PlanNodeIdAllocator;
@@ -73,10 +74,10 @@ public class TestEliminateCrossJoins
                 .on(crossJoinAndJoin(INNER))
                 .matches(
                         join(INNER, builder -> builder
-                                .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "cySymbol"), new Symbol(BIGINT, "bySymbol"))))
+                                .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "cySymbol"), new Symbol(BIGINT, "bySymbol"), Comparison.Operator.EQUAL)))
                                 .left(
                                         join(INNER, leftJoinBuilder -> leftJoinBuilder
-                                                .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "axSymbol"), new Symbol(BIGINT, "cxSymbol"))))
+                                                .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "axSymbol"), new Symbol(BIGINT, "cxSymbol"), Comparison.Operator.EQUAL)))
                                                 .left(any())
                                                 .right(any())))
                                 .right(any())));
@@ -239,20 +240,20 @@ public class TestEliminateCrossJoins
                                                             p.values(a1),
                                                             p.values(b))),
                                             p.values(e),
-                                            new EquiJoinClause(a1, e))),
+                                            new EquiJoinClause(a1, e, Comparison.Operator.EQUAL))),
                             p.values(c, d),
-                            new EquiJoinClause(a2, c),
-                            new EquiJoinClause(f, d));
+                            new EquiJoinClause(a2, c, Comparison.Operator.EQUAL),
+                            new EquiJoinClause(f, d, Comparison.Operator.EQUAL));
                 })
                 .matches(
                         node(ProjectNode.class,
                                 join(INNER, builder -> builder
-                                        .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "d"), new Symbol(BIGINT, "f"))))
+                                        .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "d"), new Symbol(BIGINT, "f"), Comparison.Operator.EQUAL)))
                                         .left(join(INNER, leftJoinBuilder -> leftJoinBuilder
-                                                .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "a2"), new Symbol(BIGINT, "c"))))
+                                                .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "a2"), new Symbol(BIGINT, "c"), Comparison.Operator.EQUAL)))
                                                 .left(
                                                         join(INNER, leftInnerJoinBuilder -> leftInnerJoinBuilder
-                                                                .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "a1"), new Symbol(BIGINT, "e"))))
+                                                                .equiCriteria(ImmutableList.of(aliases -> new EquiJoinClause(new Symbol(BIGINT, "a1"), new Symbol(BIGINT, "e"), Comparison.Operator.EQUAL)))
                                                                 .left(
                                                                         strictProject(
                                                                                 ImmutableMap.of(
@@ -305,8 +306,8 @@ public class TestEliminateCrossJoins
                             p.values(axSymbol),
                             p.values(bySymbol)),
                     p.values(cxSymbol, cySymbol),
-                    new EquiJoinClause(axSymbol, cxSymbol),
-                    new EquiJoinClause(bySymbol, cySymbol));
+                    new EquiJoinClause(axSymbol, cxSymbol, Comparison.Operator.EQUAL),
+                    new EquiJoinClause(bySymbol, cySymbol, Comparison.Operator.EQUAL));
         };
     }
 
@@ -326,7 +327,7 @@ public class TestEliminateCrossJoins
         ImmutableList.Builder<JoinNode.EquiJoinClause> criteria = ImmutableList.builder();
 
         for (int i = 0; i < symbols.length; i += 2) {
-            criteria.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, symbols[i]), new Symbol(BIGINT, symbols[i + 1])));
+            criteria.add(new JoinNode.EquiJoinClause(new Symbol(BIGINT, symbols[i]), new Symbol(BIGINT, symbols[i + 1]), Comparison.Operator.EQUAL));
         }
 
         return new JoinNode(

@@ -486,7 +486,7 @@ public class PredicatePushDown
                         rightProjections.put(rightSymbol, rightExpression);
                     }
 
-                    equiJoinClauses.add(new JoinNode.EquiJoinClause(leftSymbol, rightSymbol));
+                    equiJoinClauses.add(new JoinNode.EquiJoinClause(leftSymbol, rightSymbol, equality.operator()));
                 }
                 else {
                     joinFilterBuilder.add(conjunct);
@@ -1235,7 +1235,7 @@ public class PredicatePushDown
         private boolean joinEqualityExpression(Expression expression, Collection<Symbol> leftSymbols, Collection<Symbol> rightSymbols)
         {
             // At this point in time, our join predicates need to be deterministic
-            if (expression instanceof Comparison comparison && comparison.operator() == EQUAL && isDeterministic(expression)) {
+            if (expression instanceof Comparison comparison && (comparison.operator() == EQUAL || comparison.operator() == IDENTICAL) && isDeterministic(expression)) {
                 Set<Symbol> symbols1 = extractUnique(comparison.left());
                 Set<Symbol> symbols2 = extractUnique(comparison.right());
                 if (symbols1.isEmpty() || symbols2.isEmpty()) {

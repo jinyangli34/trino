@@ -110,7 +110,7 @@ public class TestReorderJoins
                                 INNER,
                                 p.values(new PlanNodeId("valuesA"), 2, p.symbol("A1", BIGINT), p.symbol("A2", BIGINT)),
                                 p.values(new PlanNodeId("valuesB"), 2, p.symbol("B1", BIGINT)),
-                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT))),
+                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("A2", BIGINT)),
                                 ImmutableList.of(),
                                 Optional.empty()))
@@ -145,7 +145,7 @@ public class TestReorderJoins
                             INNER,
                             p.values(new PlanNodeId("valuesA"), 2, a1),
                             p.values(new PlanNodeId("valuesB"), 2, b1),
-                            ImmutableList.of(new EquiJoinClause(a1, b1)),
+                            ImmutableList.of(new EquiJoinClause(a1, b1, Comparison.Operator.EQUAL)),
                             ImmutableList.of(a1),
                             ImmutableList.of(b1),
                             Optional.empty());
@@ -180,7 +180,7 @@ public class TestReorderJoins
                             INNER,
                             p.values(new PlanNodeId("valuesA"), 2, a1),
                             p.values(new PlanNodeId("valuesB"), 2, b1),
-                            ImmutableList.of(new EquiJoinClause(a1, b1)),
+                            ImmutableList.of(new EquiJoinClause(a1, b1, Comparison.Operator.EQUAL)),
                             ImmutableList.of(a1),
                             ImmutableList.of(b1),
                             Optional.empty());
@@ -211,7 +211,7 @@ public class TestReorderJoins
                                 INNER,
                                 p.values(new PlanNodeId("valuesA"), 2, p.symbol("A1", BIGINT)),
                                 p.values(new PlanNodeId("valuesB"), 2, p.symbol("B1", BIGINT)),
-                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT))),
+                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("A1", BIGINT)),
                                 ImmutableList.of(p.symbol("B1", BIGINT)),
                                 Optional.empty()))
@@ -243,7 +243,7 @@ public class TestReorderJoins
                                 INNER,
                                 p.values(new PlanNodeId("valuesA"), 2, p.symbol("A1", BIGINT)),
                                 p.values(new PlanNodeId("valuesB"), 2, p.symbol("B1", BIGINT)),
-                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT))),
+                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("A1", BIGINT)),
                                 ImmutableList.of(p.symbol("B1", BIGINT)),
                                 Optional.empty()))
@@ -284,7 +284,7 @@ public class TestReorderJoins
                                 INNER,
                                 p.values(new PlanNodeId("valuesA"), p.symbol("A1", BIGINT)), // matches isAtMostScalar
                                 p.values(new PlanNodeId("valuesB"), 2, p.symbol("B1", BIGINT)),
-                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT))),
+                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("A1", BIGINT)),
                                 ImmutableList.of(p.symbol("B1", BIGINT)),
                                 Optional.empty()))
@@ -299,7 +299,7 @@ public class TestReorderJoins
                                 INNER,
                                 p.values(new PlanNodeId("valuesB"), 2, p.symbol("B1", BIGINT)),
                                 p.values(new PlanNodeId("valuesA"), p.symbol("A1", BIGINT)), // matches isAtMostScalar
-                                ImmutableList.of(new EquiJoinClause(p.symbol("B1", BIGINT), p.symbol("A1", BIGINT))),
+                                ImmutableList.of(new EquiJoinClause(p.symbol("B1", BIGINT), p.symbol("A1", BIGINT), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("B1", BIGINT)),
                                 ImmutableList.of(p.symbol("A1", BIGINT)),
                                 Optional.empty()))
@@ -340,7 +340,7 @@ public class TestReorderJoins
                                 INNER,
                                 p.values(new PlanNodeId("valuesA"), 2, p.symbol("A1")),
                                 p.values(new PlanNodeId("valuesB"), p.symbol("B1")),
-                                ImmutableList.of(new EquiJoinClause(p.symbol("A1"), p.symbol("B1"))),
+                                ImmutableList.of(new EquiJoinClause(p.symbol("A1"), p.symbol("B1"), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("A1")),
                                 ImmutableList.of(),
                                 Optional.empty()))
@@ -356,7 +356,7 @@ public class TestReorderJoins
                                 INNER,
                                 p.values(new PlanNodeId("valuesA"), p.symbol("A1", DOUBLE)),
                                 p.values(new PlanNodeId("valuesB"), p.symbol("B1", DOUBLE)),
-                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", DOUBLE), p.symbol("B1", DOUBLE))),
+                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", DOUBLE), p.symbol("B1", DOUBLE), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("A1", DOUBLE)),
                                 ImmutableList.of(p.symbol("B1", DOUBLE)),
                                 Optional.of(new Comparison(
@@ -397,7 +397,7 @@ public class TestReorderJoins
                                         Optional.empty()),
                                 p.values(new PlanNodeId("valuesC"), 2, p.symbol("C1", BIGINT)),
                                 ImmutableList.of(
-                                        new EquiJoinClause(p.symbol("B2", BIGINT), p.symbol("C1", BIGINT))),
+                                        new EquiJoinClause(p.symbol("B2", BIGINT), p.symbol("C1", BIGINT), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("A1", BIGINT)),
                                 ImmutableList.of(),
                                 Optional.of(new Comparison(EQUAL, p.symbol("A1", BIGINT).toSymbolReference(), p.symbol("B1", BIGINT).toSymbolReference()))))
@@ -446,7 +446,7 @@ public class TestReorderJoins
                                                 ImmutableList.of(p.symbol("B1", BIGINT)),
                                                 Optional.empty())),
                                 p.values(new PlanNodeId("valuesC"), 2, p.symbol("C1", BIGINT)),
-                                ImmutableList.of(new EquiJoinClause(p.symbol("P1", BIGINT), p.symbol("C1", BIGINT))),
+                                ImmutableList.of(new EquiJoinClause(p.symbol("P1", BIGINT), p.symbol("C1", BIGINT), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("P1", BIGINT)),
                                 ImmutableList.of(),
                                 Optional.of(new Comparison(EQUAL, p.symbol("P2", BIGINT).toSymbolReference(), p.symbol("C1", BIGINT).toSymbolReference()))))
@@ -495,12 +495,12 @@ public class TestReorderJoins
                                                 INNER,
                                                 p.values(new PlanNodeId("valuesA"), 2, p.symbol("A1", BIGINT)),
                                                 p.values(new PlanNodeId("valuesB"), 2, p.symbol("B1", BIGINT)),
-                                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT))),
+                                                ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT), Comparison.Operator.EQUAL)),
                                                 ImmutableList.of(p.symbol("A1", BIGINT)),
                                                 ImmutableList.of(p.symbol("B1", BIGINT)),
                                                 Optional.empty())),
                                 p.values(new PlanNodeId("valuesC"), 2, p.symbol("C1", BIGINT)),
-                                ImmutableList.of(new EquiJoinClause(p.symbol("P1", BIGINT), p.symbol("C1", BIGINT))),
+                                ImmutableList.of(new EquiJoinClause(p.symbol("P1", BIGINT), p.symbol("C1", BIGINT), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("P1", BIGINT)),
                                 ImmutableList.of(),
                                 Optional.empty()))
@@ -543,13 +543,13 @@ public class TestReorderJoins
                                         INNER,
                                         p.values(new PlanNodeId("valuesA"), 2, p.symbol("A1", BIGINT)),
                                         p.values(new PlanNodeId("valuesB"), 2, p.symbol("B1", BIGINT), p.symbol("B2", BIGINT)),
-                                        ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT))),
+                                        ImmutableList.of(new EquiJoinClause(p.symbol("A1", BIGINT), p.symbol("B1", BIGINT), Comparison.Operator.EQUAL)),
                                         ImmutableList.of(p.symbol("A1", BIGINT)),
                                         ImmutableList.of(p.symbol("B1", BIGINT), p.symbol("B2", BIGINT)),
                                         Optional.empty()),
                                 p.values(new PlanNodeId("valuesC"), 2, p.symbol("C1", BIGINT)),
                                 ImmutableList.of(
-                                        new EquiJoinClause(p.symbol("B2", BIGINT), p.symbol("C1", BIGINT))),
+                                        new EquiJoinClause(p.symbol("B2", BIGINT), p.symbol("C1", BIGINT), Comparison.Operator.EQUAL)),
                                 ImmutableList.of(p.symbol("A1", BIGINT)),
                                 ImmutableList.of(),
                                 Optional.of(new Comparison(EQUAL, p.symbol("A1", BIGINT).toSymbolReference(), p.symbol("B1", BIGINT).toSymbolReference()))))
@@ -593,7 +593,7 @@ public class TestReorderJoins
                             INNER,
                             p.values(new PlanNodeId("valuesA"), aRows, a1),
                             p.values(new PlanNodeId("valuesB"), bRows, b1),
-                            ImmutableList.of(new EquiJoinClause(a1, b1)),
+                            ImmutableList.of(new EquiJoinClause(a1, b1, Comparison.Operator.EQUAL)),
                             ImmutableList.of(a1),
                             ImmutableList.of(b1),
                             Optional.empty());
@@ -628,7 +628,7 @@ public class TestReorderJoins
                             INNER,
                             p.values(new PlanNodeId("valuesA"), aRows, a1),
                             p.values(new PlanNodeId("valuesB"), bRows, b1),
-                            ImmutableList.of(new EquiJoinClause(a1, b1)),
+                            ImmutableList.of(new EquiJoinClause(a1, b1, Comparison.Operator.EQUAL)),
                             ImmutableList.of(a1),
                             ImmutableList.of(b1),
                             Optional.empty());
@@ -672,7 +672,7 @@ public class TestReorderJoins
                             INNER,
                             p.values(new PlanNodeId("valuesA"), aRows, a1),
                             p.values(new PlanNodeId("valuesB"), bRows, b1),
-                            ImmutableList.of(new EquiJoinClause(a1, b1)),
+                            ImmutableList.of(new EquiJoinClause(a1, b1, Comparison.Operator.EQUAL)),
                             ImmutableList.of(a1),
                             ImmutableList.of(b1),
                             Optional.empty());

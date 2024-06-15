@@ -76,7 +76,7 @@ public class TestReplaceJoinOverConstantWithProject
                                 INNER,
                                 p.values(1, p.symbol("a")),
                                 p.values(5, p.symbol("b")),
-                                new EquiJoinClause(p.symbol("a"), p.symbol("b"))))
+                                new EquiJoinClause(p.symbol("a"), p.symbol("b"), Comparison.Operator.EQUAL)))
                 .doesNotFire();
 
         tester().assertThat(new ReplaceJoinOverConstantWithProject())

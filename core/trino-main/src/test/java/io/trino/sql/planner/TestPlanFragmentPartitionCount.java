@@ -22,6 +22,7 @@ import io.trino.execution.QueryManagerConfig;
 import io.trino.execution.warnings.WarningCollector;
 import io.trino.plugin.tpch.TpchConnectorFactory;
 import io.trino.security.AllowAllAccessControl;
+import io.trino.sql.ir.Comparison;
 import io.trino.sql.planner.iterative.rule.test.PlanBuilder;
 import io.trino.sql.planner.plan.JoinNode;
 import io.trino.sql.planner.plan.OutputNode;
@@ -113,7 +114,7 @@ public class TestPlanFragmentPartitionCount
                                                                         .addSource(p.values(c, d))
                                                                         .addInputsSet(c, d)
                                                                         .fixedHashDistributionPartitioningScheme(ImmutableList.of(c, d), ImmutableList.of(d), 5)),
-                                                                new JoinNode.EquiJoinClause(b, d)))
+                                                                new JoinNode.EquiJoinClause(b, d, Comparison.Operator.EQUAL)))
                                                 .addInputsSet(a, b, c, d)
                                                 .fixedArbitraryDistributionPartitioningScheme(ImmutableList.of(a, b, c, d), 2)))
                                 .addSource(p.values(f, g, h, i))

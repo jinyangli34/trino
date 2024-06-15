@@ -883,7 +883,7 @@ public class ExpressionAnalyzer
                 case EQUAL, NOT_EQUAL -> OperatorType.EQUAL;
                 case LESS_THAN, GREATER_THAN -> OperatorType.LESS_THAN;
                 case LESS_THAN_OR_EQUAL, GREATER_THAN_OR_EQUAL -> OperatorType.LESS_THAN_OR_EQUAL;
-                case IS_DISTINCT_FROM -> OperatorType.IDENTICAL;
+                case IS_DISTINCT_FROM, IS_NOT_DISTINCT_FROM -> OperatorType.IDENTICAL;
             };
 
             return getOperator(context, node, operatorType, node.getLeft(), node.getRight());

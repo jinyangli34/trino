@@ -361,7 +361,7 @@ class SubqueryPlanner
                                 .withAdditionalMappings(mapAll(cluster, subPlan.getScope(), output)),
                         subPlan.getRoot());
             }
-            case IS_DISTINCT_FROM -> // Cannot be used with quantified comparison
+            case IS_DISTINCT_FROM, IS_NOT_DISTINCT_FROM -> // Cannot be used with quantified comparison
                     throw new IllegalArgumentException(format("Unexpected quantified comparison: '%s %s'", operator.getValue(), quantifier));
         };
     }
@@ -427,6 +427,7 @@ class SubqueryPlanner
             case GREATER_THAN -> ApplyNode.Operator.GREATER_THAN;
             case GREATER_THAN_OR_EQUAL -> ApplyNode.Operator.GREATER_THAN_OR_EQUAL;
             case IS_DISTINCT_FROM -> throw new IllegalArgumentException();
+            case IS_NOT_DISTINCT_FROM -> throw new IllegalArgumentException();
         };
     }
 
