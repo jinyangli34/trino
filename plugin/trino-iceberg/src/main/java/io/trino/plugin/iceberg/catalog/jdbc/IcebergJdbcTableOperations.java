@@ -39,7 +39,7 @@ public class IcebergJdbcTableOperations
             Optional<String> owner,
             Optional<String> location)
     {
-        super(fileIo, session, database, table, owner, location);
+        super(fileIo, session, database, table, owner, location, Optional.empty());
         this.jdbcClient = requireNonNull(jdbcClient, "jdbcClient is null");
     }
 

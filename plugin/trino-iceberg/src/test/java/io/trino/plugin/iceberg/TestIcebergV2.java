@@ -27,13 +27,6 @@ import io.trino.plugin.hive.TestingHivePlugin;
 import io.trino.plugin.hive.metastore.HiveMetastore;
 import io.trino.plugin.hive.metastore.HiveMetastoreFactory;
 import io.trino.plugin.iceberg.fileio.ForwardingFileIo;
-import io.trino.spi.predicate.Domain;
-import io.trino.spi.predicate.Range;
-import io.trino.spi.predicate.TupleDomain;
-import io.trino.spi.predicate.ValueSet;
-import io.trino.spi.statistics.TableStatistics;
-import io.trino.spi.type.TestingTypeManager;
-import io.trino.spi.type.TypeManager;
 import io.trino.testing.AbstractTestQueryFramework;
 import io.trino.testing.MaterializedRow;
 import io.trino.testing.QueryRunner;
@@ -87,7 +80,6 @@ import static io.trino.plugin.iceberg.IcebergQueryRunner.ICEBERG_CATALOG;
 import static io.trino.plugin.iceberg.IcebergTestUtils.getFileSystemFactory;
 import static io.trino.plugin.iceberg.util.EqualityDeleteUtils.writeEqualityDeleteForTable;
 import static io.trino.plugin.iceberg.util.EqualityDeleteUtils.writeEqualityDeleteForTableWithSchema;
-import static io.trino.spi.type.IntegerType.INTEGER;
 import static io.trino.testing.TestingConnectorSession.SESSION;
 import static io.trino.testing.TestingNames.randomNameSuffix;
 import static io.trino.tpch.TpchTable.NATION;
@@ -115,6 +107,8 @@ public class TestIcebergV2
     {
         QueryRunner queryRunner = IcebergQueryRunner.builder()
                 .setInitialTables(NATION)
+                .addIcebergProperty("iceberg.metadata-cache-enabled", "true")
+                .addIcebergProperty("iceberg.extended-statistics.enabled", "true")
                 .build();
 
         metastore = ((IcebergConnector) queryRunner.getCoordinator().getConnector(ICEBERG_CATALOG)).getInjector()
@@ -914,45 +908,6 @@ public class TestIcebergV2
                                         ARRAY[4L],
                                         null)
                         """);
-    }
-
-    @Test
-    public void testStatsFilePruning()
-    {
-        try (TestTable testTable = new TestTable(getQueryRunner()::execute, "test_stats_file_pruning_", "(a INT, b INT) WITH (partitioning = ARRAY['b'])")) {
-            assertUpdate("INSERT INTO " + testTable.getName() + " VALUES (1, 10), (10, 10)", 2);
-            assertUpdate("INSERT INTO " + testTable.getName() + " VALUES (200, 10), (300, 20)", 2);
-
-            Optional<Long> snapshotId = Optional.of((long) computeScalar("SELECT snapshot_id FROM \"" + testTable.getName() + "$snapshots\" ORDER BY committed_at DESC FETCH FIRST 1 ROW WITH TIES"));
-            TypeManager typeManager = new TestingTypeManager();
-            Table table = loadTable(testTable.getName());
-            TableStatistics withNoFilter = TableStatisticsReader.makeTableStatistics(typeManager, table, snapshotId, TupleDomain.all(), TupleDomain.all(), true, fileSystemFactory.create(SESSION));
-            assertThat(withNoFilter.getRowCount().getValue()).isEqualTo(4.0);
-
-            TableStatistics withPartitionFilter = TableStatisticsReader.makeTableStatistics(
-                    typeManager,
-                    table,
-                    snapshotId,
-                    TupleDomain.withColumnDomains(ImmutableMap.of(
-                            new IcebergColumnHandle(ColumnIdentity.primitiveColumnIdentity(1, "b"), INTEGER, ImmutableList.of(), INTEGER, true, Optional.empty()),
-                            Domain.singleValue(INTEGER, 10L))),
-                    TupleDomain.all(),
-                    true,
-                    fileSystemFactory.create(SESSION));
-            assertThat(withPartitionFilter.getRowCount().getValue()).isEqualTo(3.0);
-
-            TableStatistics withUnenforcedFilter = TableStatisticsReader.makeTableStatistics(
-                    typeManager,
-                    table,
-                    snapshotId,
-                    TupleDomain.all(),
-                    TupleDomain.withColumnDomains(ImmutableMap.of(
-                            new IcebergColumnHandle(ColumnIdentity.primitiveColumnIdentity(0, "a"), INTEGER, ImmutableList.of(), INTEGER, true, Optional.empty()),
-                            Domain.create(ValueSet.ofRanges(Range.greaterThan(INTEGER, 100L)), true))),
-                    true,
-                    fileSystemFactory.create(SESSION));
-            assertThat(withUnenforcedFilter.getRowCount().getValue()).isEqualTo(2.0);
-        }
     }
 
     @Test

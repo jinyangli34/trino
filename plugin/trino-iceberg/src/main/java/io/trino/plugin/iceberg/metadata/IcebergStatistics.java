@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.iceberg;
+package io.trino.plugin.iceberg.metadata;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,7 +44,7 @@ import static io.trino.spi.function.InvocationConvention.InvocationReturnConvent
 import static io.trino.spi.function.InvocationConvention.simpleConvention;
 import static java.util.Objects.requireNonNull;
 
-record IcebergStatistics(
+public record IcebergStatistics(
         long recordCount,
         long fileCount,
         long size,
@@ -54,7 +54,7 @@ record IcebergStatistics(
         Map<Integer, Long> nanCounts,
         Map<Integer, Long> columnSizes)
 {
-    IcebergStatistics
+    public IcebergStatistics
     {
         minValues = ImmutableMap.copyOf(requireNonNull(minValues, "minValues is null"));
         maxValues = ImmutableMap.copyOf(requireNonNull(maxValues, "maxValues is null"));
@@ -63,7 +63,7 @@ record IcebergStatistics(
         columnSizes = ImmutableMap.copyOf(requireNonNull(columnSizes, "columnSizes is null"));
     }
 
-    static class Builder
+    public static class Builder
     {
         private final List<Types.NestedField> columns;
         private final TypeManager typeManager;
@@ -86,6 +86,26 @@ record IcebergStatistics(
 
             this.fieldIdToTrinoType = columns.stream()
                     .collect(toImmutableMap(Types.NestedField::fieldId, column -> toTrinoType(column.type(), typeManager)));
+        }
+
+        public void acceptStatistics(IcebergStatistics statistics)
+        {
+            recordCount += statistics.recordCount;
+            fileCount += statistics.fileCount;
+            size += statistics.size;
+
+            for (Types.NestedField column : columns) {
+                int id = column.fieldId();
+                Optional<Long> nullCount = Optional.ofNullable(statistics.nullCounts().get(id));
+                Optional<Long> nanCount = Optional.ofNullable(statistics.nanCounts().get(id));
+                updateNullCountStats(id, nullCount);
+                updateNanCountStats(id, nanCount);
+                updateMinMaxStats(id, fieldIdToTrinoType.get(id), statistics.minValues.get(id), statistics.maxValues.get(id), nullCount, statistics.recordCount());
+                long colSize = statistics.columnSizes().getOrDefault(id, -1L);
+                if (colSize != -1) {
+                    columnSizes.merge(id, colSize, Long::sum);
+                }
+            }
         }
 
         public void acceptDataFile(DataFile dataFile, PartitionSpec partitionSpec)

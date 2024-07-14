@@ -84,7 +84,7 @@ public class GlueIcebergTableOperations
             Optional<String> owner,
             Optional<String> location)
     {
-        super(fileIo, session, database, table, owner, location);
+        super(fileIo, session, database, table, owner, location, Optional.empty());
         this.typeManager = requireNonNull(typeManager, "typeManager is null");
         this.cacheTableMetadata = cacheTableMetadata;
         this.glueClient = requireNonNull(glueClient, "glueClient is null");

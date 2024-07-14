@@ -20,6 +20,7 @@ import io.trino.plugin.iceberg.catalog.IcebergTableOperations;
 import io.trino.plugin.iceberg.catalog.IcebergTableOperationsProvider;
 import io.trino.plugin.iceberg.catalog.TrinoCatalog;
 import io.trino.plugin.iceberg.fileio.ForwardingFileIo;
+import io.trino.plugin.iceberg.metadata.IcebergTableMetadataCache;
 import io.trino.spi.connector.ConnectorSession;
 
 import java.util.Optional;
@@ -31,12 +32,14 @@ public class HiveMetastoreTableOperationsProvider
 {
     private final TrinoFileSystemFactory fileSystemFactory;
     private final ThriftMetastoreFactory thriftMetastoreFactory;
+    private final Optional<IcebergTableMetadataCache> tableMetadataCache;
 
     @Inject
-    public HiveMetastoreTableOperationsProvider(TrinoFileSystemFactory fileSystemFactory, ThriftMetastoreFactory thriftMetastoreFactory)
+    public HiveMetastoreTableOperationsProvider(TrinoFileSystemFactory fileSystemFactory, ThriftMetastoreFactory thriftMetastoreFactory, IcebergTableMetadataCache icebergTableMetadataCache)
     {
         this.fileSystemFactory = requireNonNull(fileSystemFactory, "fileSystemFactory is null");
         this.thriftMetastoreFactory = requireNonNull(thriftMetastoreFactory, "thriftMetastoreFactory is null");
+        this.tableMetadataCache = Optional.ofNullable(icebergTableMetadataCache);
     }
 
     @Override
@@ -56,6 +59,7 @@ public class HiveMetastoreTableOperationsProvider
                 database,
                 table,
                 owner,
-                location);
+                location,
+                tableMetadataCache);
     }
 }

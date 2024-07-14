@@ -99,6 +99,7 @@ public final class IcebergSessionProperties
     private static final String SORTED_WRITING_ENABLED = "sorted_writing_enabled";
     private static final String QUERY_PARTITION_FILTER_REQUIRED = "query_partition_filter_required";
     private static final String INCREMENTAL_REFRESH_ENABLED = "incremental_refresh_enabled";
+    private static final String METADATA_CACHE_ENABLED = "metadata_cache_enabled";
 
     private final List<PropertyMetadata<?>> sessionProperties;
 
@@ -360,6 +361,11 @@ public final class IcebergSessionProperties
                         "Enable Incremental refresh for MVs backed by Iceberg tables, when possible.",
                         icebergConfig.isIncrementalRefreshEnabled(),
                         false))
+                .add(booleanProperty(
+                        METADATA_CACHE_ENABLED,
+                        "Enable Iceberg metadata cache",
+                        icebergConfig.isMetadataCacheEnabled(),
+                        false))
                 .build();
     }
 
@@ -589,5 +595,10 @@ public final class IcebergSessionProperties
     public static boolean isIncrementalRefreshEnabled(ConnectorSession session)
     {
         return session.getProperty(INCREMENTAL_REFRESH_ENABLED, Boolean.class);
+    }
+
+    public static boolean isMetadataCacheEnabled(ConnectorSession session)
+    {
+        return session.getProperty(METADATA_CACHE_ENABLED, Boolean.class);
     }
 }

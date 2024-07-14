@@ -34,6 +34,7 @@ import io.trino.plugin.iceberg.catalog.rest.DefaultIcebergFileSystemFactory;
 import io.trino.plugin.iceberg.functions.IcebergFunctionProvider;
 import io.trino.plugin.iceberg.functions.tablechanges.TableChangesFunctionProcessorProviderFactory;
 import io.trino.plugin.iceberg.functions.tablechanges.TableChangesFunctionProvider;
+import io.trino.plugin.iceberg.metadata.IcebergTableMetadataCache;
 import io.trino.plugin.iceberg.procedure.DropExtendedStatsTableProcedure;
 import io.trino.plugin.iceberg.procedure.ExpireSnapshotsTableProcedure;
 import io.trino.plugin.iceberg.procedure.OptimizeTableProcedure;
@@ -92,6 +93,8 @@ public class IcebergModule
 
         binder.bind(TableStatisticsWriter.class).in(Scopes.SINGLETON);
         binder.bind(IcebergMetadataFactory.class).in(Scopes.SINGLETON);
+        binder.bind(IcebergTableMetadataCache.class).in(Scopes.SINGLETON);
+        newExporter(binder).export(IcebergTableMetadataCache.class).withGeneratedName();
 
         jsonCodecBinder(binder).bindJsonCodec(CommitTaskData.class);
 

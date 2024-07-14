@@ -19,10 +19,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import io.airlift.log.Logger;
 import io.trino.filesystem.TrinoFileSystem;
+import io.trino.plugin.iceberg.metadata.IcebergStatistics;
+import io.trino.plugin.iceberg.metadata.IcebergTableMetadataCache;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ColumnHandle;
 import io.trino.spi.connector.ConnectorSession;
-import io.trino.spi.predicate.Domain;
 import io.trino.spi.predicate.TupleDomain;
 import io.trino.spi.statistics.ColumnStatistics;
 import io.trino.spi.statistics.DoubleRange;
@@ -32,19 +33,14 @@ import io.trino.spi.type.FixedWidthType;
 import io.trino.spi.type.TypeManager;
 import jakarta.annotation.Nullable;
 import org.apache.iceberg.BlobMetadata;
-import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.StatisticsFile;
 import org.apache.iceberg.Table;
-import org.apache.iceberg.TableScan;
-import org.apache.iceberg.io.CloseableIterable;
 import org.apache.iceberg.puffin.StandardBlobTypes;
 import org.apache.iceberg.types.Type;
 import org.apache.iceberg.types.Types;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -58,17 +54,11 @@ import static com.google.common.base.Verify.verifyNotNull;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.collect.Streams.stream;
-import static io.airlift.slice.Slices.utf8Slice;
-import static io.trino.plugin.iceberg.ExpressionConverter.toIcebergExpression;
 import static io.trino.plugin.iceberg.IcebergErrorCode.ICEBERG_INVALID_METADATA;
 import static io.trino.plugin.iceberg.IcebergMetadataColumn.isMetadataColumnId;
 import static io.trino.plugin.iceberg.IcebergSessionProperties.isExtendedStatisticsEnabled;
-import static io.trino.plugin.iceberg.IcebergUtil.getFileModifiedTimePathDomain;
-import static io.trino.plugin.iceberg.IcebergUtil.getModificationTime;
-import static io.trino.plugin.iceberg.IcebergUtil.getPathDomain;
+import static io.trino.plugin.iceberg.IcebergSessionProperties.isMetadataCacheEnabled;
 import static io.trino.plugin.iceberg.IcebergUtil.getTopLevelColumns;
-import static io.trino.spi.type.DateTimeEncoding.packDateTimeWithZone;
-import static io.trino.spi.type.TimeZoneKey.UTC_KEY;
 import static io.trino.spi.type.VarbinaryType.VARBINARY;
 import static io.trino.spi.type.VarcharType.VARCHAR;
 import static java.lang.Long.parseLong;
@@ -85,28 +75,31 @@ public final class TableStatisticsReader
 
     public static final String APACHE_DATASKETCHES_THETA_V1_NDV_PROPERTY = "ndv";
 
-    public static TableStatistics getTableStatistics(TypeManager typeManager, ConnectorSession session, IcebergTableHandle tableHandle, Table icebergTable, TrinoFileSystem fileSystem)
+    public static TableStatistics getTableStatistics(TypeManager typeManager, ConnectorSession session, IcebergTableHandle tableHandle, Table icebergTable, TrinoFileSystem fileSystem, IcebergTableMetadataCache metadataCache)
     {
         return makeTableStatistics(
                 typeManager,
+                session,
                 icebergTable,
                 tableHandle.getSnapshotId(),
                 tableHandle.getEnforcedPredicate(),
                 tableHandle.getUnenforcedPredicate(),
-                isExtendedStatisticsEnabled(session),
-                fileSystem);
+                fileSystem,
+                metadataCache);
     }
 
     @VisibleForTesting
     public static TableStatistics makeTableStatistics(
             TypeManager typeManager,
+            ConnectorSession session,
             Table icebergTable,
             Optional<Long> snapshot,
             TupleDomain<IcebergColumnHandle> enforcedConstraint,
             TupleDomain<IcebergColumnHandle> unenforcedConstraint,
-            boolean extendedStatisticsEnabled,
-            TrinoFileSystem fileSystem)
+            TrinoFileSystem fileSystem,
+            IcebergTableMetadataCache metadataCache)
     {
+        boolean extendedStatisticsEnabled = isExtendedStatisticsEnabled(session);
         if (snapshot.isEmpty()) {
             // No snapshot, so no data.
             return TableStatistics.builder()
@@ -135,34 +128,9 @@ public final class TableStatisticsReader
                 .map(column -> Maps.immutableEntry(column.fieldId(), column.type()))
                 .collect(toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        Domain pathDomain = getPathDomain(effectivePredicate);
-        Domain fileModifiedTimeDomain = getFileModifiedTimePathDomain(effectivePredicate);
-        TableScan tableScan = icebergTable.newScan()
-                .filter(toIcebergExpression(effectivePredicate.filter((column, domain) -> !isMetadataColumnId(column.getId()))))
-                .useSnapshot(snapshotId)
-                .includeColumnStats();
-
-        IcebergStatistics.Builder icebergStatisticsBuilder = new IcebergStatistics.Builder(columns, typeManager);
-        try (CloseableIterable<FileScanTask> fileScanTasks = tableScan.planFiles()) {
-            fileScanTasks.forEach(fileScanTask -> {
-                if (!pathDomain.isAll() && !pathDomain.includesNullableValue(utf8Slice(fileScanTask.file().path().toString()))) {
-                    return;
-                }
-                if (!fileModifiedTimeDomain.isAll()) {
-                    long fileModifiedTime = getModificationTime(fileScanTask.file().path().toString(), fileSystem);
-                    if (!fileModifiedTimeDomain.includesNullableValue(packDateTimeWithZone(fileModifiedTime, UTC_KEY))) {
-                        return;
-                    }
-                }
-
-                icebergStatisticsBuilder.acceptDataFile(fileScanTask.file(), fileScanTask.spec());
-            });
-        }
-        catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
-        IcebergStatistics summary = icebergStatisticsBuilder.build();
+        TupleDomain<IcebergColumnHandle> filter = effectivePredicate.filter((column, domain) -> !isMetadataColumnId(column.getId()));
+        IcebergStatistics summary = metadataCache.getStatistics(isMetadataCacheEnabled(session), icebergTable, snapshotId, filter, fileSystem)
+                .getTableStatistics(typeManager);
 
         if (summary.fileCount() == 0) {
             return TableStatistics.builder()

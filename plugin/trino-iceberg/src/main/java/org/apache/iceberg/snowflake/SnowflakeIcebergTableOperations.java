@@ -44,7 +44,7 @@ public class SnowflakeIcebergTableOperations
             Optional<String> owner,
             Optional<String> location)
     {
-        super(fileIo, session, database, table, owner, location);
+        super(fileIo, session, database, table, owner, location, Optional.empty());
         TableIdentifier tableIdentifier = TableIdentifier.of(Namespace.of(snowflakeDatabase, database), table);
         this.icebergSnowflakeTableOperations = requireNonNull((SnowflakeTableOperations) trinoSnowflakeCatalog.getSnowflakeCatalog().newTableOps(tableIdentifier), "snowflakeTableOperations is null");
     }

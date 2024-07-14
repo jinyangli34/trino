@@ -130,7 +130,7 @@ public class TestTrinoHiveCatalogWithHiveMetastore
                     {
                         return thriftMetastore;
                     }
-                }),
+                }, noopMetadataCache),
                 useUniqueTableLocations,
                 false,
                 false,

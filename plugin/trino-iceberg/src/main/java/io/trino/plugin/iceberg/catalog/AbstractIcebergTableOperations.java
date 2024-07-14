@@ -13,12 +13,14 @@
  */
 package io.trino.plugin.iceberg.catalog;
 
+import com.google.common.base.Strings;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import io.trino.annotation.NotThreadSafe;
 import io.trino.filesystem.Location;
 import io.trino.plugin.hive.metastore.Column;
 import io.trino.plugin.hive.metastore.StorageFormat;
+import io.trino.plugin.iceberg.metadata.IcebergTableMetadataCache;
 import io.trino.plugin.iceberg.util.HiveSchemaUtil;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ConnectorSession;
@@ -50,6 +52,7 @@ import static io.trino.hive.formats.HiveClassNames.LAZY_SIMPLE_SERDE_CLASS;
 import static io.trino.plugin.hive.HiveType.toHiveType;
 import static io.trino.plugin.iceberg.IcebergErrorCode.ICEBERG_INVALID_METADATA;
 import static io.trino.plugin.iceberg.IcebergErrorCode.ICEBERG_MISSING_METADATA;
+import static io.trino.plugin.iceberg.IcebergSessionProperties.isMetadataCacheEnabled;
 import static io.trino.plugin.iceberg.IcebergTableName.isMaterializedViewStorage;
 import static io.trino.plugin.iceberg.IcebergUtil.METADATA_FOLDER_NAME;
 import static io.trino.plugin.iceberg.IcebergUtil.fixBrokenMetadataLocation;
@@ -83,6 +86,7 @@ public abstract class AbstractIcebergTableOperations
     protected final Optional<String> owner;
     protected final Optional<String> location;
     protected final FileIO fileIo;
+    private final Optional<IcebergTableMetadataCache> metadataCache;
 
     protected TableMetadata currentMetadata;
     protected String currentMetadataLocation;
@@ -95,7 +99,8 @@ public abstract class AbstractIcebergTableOperations
             String database,
             String table,
             Optional<String> owner,
-            Optional<String> location)
+            Optional<String> location,
+            Optional<IcebergTableMetadataCache> metadataCache)
     {
         this.fileIo = requireNonNull(fileIo, "fileIo is null");
         this.session = requireNonNull(session, "session is null");
@@ -103,6 +108,7 @@ public abstract class AbstractIcebergTableOperations
         this.tableName = requireNonNull(table, "table is null");
         this.owner = requireNonNull(owner, "owner is null");
         this.location = requireNonNull(location, "location is null");
+        this.metadataCache = requireNonNull(metadataCache, "metadataCache is null");
     }
 
     @Override
@@ -233,11 +239,20 @@ public abstract class AbstractIcebergTableOperations
         return newTableMetadataFilePath;
     }
 
+    private TableMetadata readMetadata(FileIO fileIo, String location)
+    {
+        if (metadataCache.isPresent() && isMetadataCacheEnabled(session) && !Strings.isNullOrEmpty(location)) {
+            return metadataCache.get().getMetadata(location);
+        }
+
+        return TableMetadataParser.read(fileIo, fileIo.newInputFile(location));
+    }
+
     protected void refreshFromMetadataLocation(String newLocation)
     {
         refreshFromMetadataLocation(
                 newLocation,
-                metadataLocation -> TableMetadataParser.read(fileIo, fileIo.newInputFile(metadataLocation)));
+                metadataLocation -> readMetadata(fileIo, metadataLocation));
     }
 
     protected void refreshFromMetadataLocation(String newLocation, Function<String, TableMetadata> metadataLoader)

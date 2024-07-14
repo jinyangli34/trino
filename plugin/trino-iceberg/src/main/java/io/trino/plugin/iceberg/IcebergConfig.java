@@ -35,6 +35,7 @@ import static io.trino.plugin.hive.HiveCompressionCodec.ZSTD;
 import static io.trino.plugin.iceberg.CatalogType.HIVE_METASTORE;
 import static io.trino.plugin.iceberg.IcebergFileFormat.PARQUET;
 import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @DefunctConfig({
@@ -80,6 +81,9 @@ public class IcebergConfig
     private boolean queryPartitionFilterRequired;
     private int splitManagerThreads = Runtime.getRuntime().availableProcessors() * 2;
     private boolean incrementalRefreshEnabled = true;
+    private boolean metadataCacheEnabled;
+    private Duration metadataCacheTtl = new Duration(10, MINUTES);
+    private int cacheSize = 2000;
 
     public CatalogType getCatalogType()
     {
@@ -448,5 +452,46 @@ public class IcebergConfig
     public boolean isStorageSchemaSetWhenHidingIsEnabled()
     {
         return hideMaterializedViewStorageTable && materializedViewsStorageSchema.isPresent();
+    }
+
+    public boolean isMetadataCacheEnabled()
+    {
+        return metadataCacheEnabled;
+    }
+
+    @Config("iceberg.metadata-cache-enabled")
+    @ConfigDescription("Enable metadata cache")
+    public IcebergConfig setMetadataCacheEnabled(boolean metadataCacheEnabled)
+    {
+        this.metadataCacheEnabled = metadataCacheEnabled;
+        return this;
+    }
+
+    @NotNull
+    public Duration getMetadataCacheTtl()
+    {
+        return metadataCacheTtl;
+    }
+
+    @Config("iceberg.metadata-cache-ttl")
+    @ConfigDescription("metadata cache ttl")
+    public IcebergConfig setMetadataCacheTtl(Duration metadataCacheTtl)
+    {
+        this.metadataCacheTtl = metadataCacheTtl;
+        return this;
+    }
+
+    @NotNull
+    public int getCacheSize()
+    {
+        return cacheSize;
+    }
+
+    @Config("iceberg.metadata-cache-size")
+    @ConfigDescription("metadata cache size")
+    public IcebergConfig setCacheSize(int cacheSize)
+    {
+        this.cacheSize = cacheSize;
+        return this;
     }
 }

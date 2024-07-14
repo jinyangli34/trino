@@ -54,7 +54,7 @@ public class IcebergNessieTableOperations
             Optional<String> owner,
             Optional<String> location)
     {
-        super(fileIo, session, database, table, owner, location);
+        super(fileIo, session, database, table, owner, location, Optional.empty());
         this.nessieClient = requireNonNull(nessieClient, "nessieClient is null");
     }
 

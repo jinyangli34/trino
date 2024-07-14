@@ -49,7 +49,7 @@ public class FileMetastoreTableOperations
             Optional<String> owner,
             Optional<String> location)
     {
-        super(fileIo, metastore, session, database, table, owner, location);
+        super(fileIo, metastore, session, database, table, owner, location, Optional.empty());
     }
 
     @Override

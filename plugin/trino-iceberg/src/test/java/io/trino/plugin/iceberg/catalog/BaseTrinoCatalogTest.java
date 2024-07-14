@@ -16,12 +16,15 @@ package io.trino.plugin.iceberg.catalog;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.airlift.log.Logger;
+import io.trino.filesystem.local.LocalFileSystem;
 import io.trino.plugin.base.util.AutoCloseableCloser;
 import io.trino.plugin.hive.NodeVersion;
 import io.trino.plugin.hive.metastore.TableInfo;
 import io.trino.plugin.iceberg.CommitTaskData;
+import io.trino.plugin.iceberg.IcebergConfig;
 import io.trino.plugin.iceberg.IcebergMetadata;
 import io.trino.plugin.iceberg.TableStatisticsWriter;
+import io.trino.plugin.iceberg.metadata.IcebergTableMetadataCache;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.CatalogHandle;
 import io.trino.spi.connector.ConnectorMetadata;
@@ -63,6 +66,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 public abstract class BaseTrinoCatalogTest
 {
     private static final Logger LOG = Logger.get(BaseTrinoCatalogTest.class);
+
+    protected IcebergTableMetadataCache noopMetadataCache = new IcebergTableMetadataCache(
+            _ -> new LocalFileSystem(Path.of("/tmp/")), new IcebergConfig(), PLANNER_CONTEXT.getTypeManager());
 
     protected abstract TrinoCatalog createTrinoCatalog(boolean useUniqueTableLocations);
 
@@ -117,7 +123,8 @@ public abstract class BaseTrinoCatalogTest
                     (connectorIdentity, fileIoProperties) -> {
                         throw new UnsupportedOperationException();
                     },
-                    new TableStatisticsWriter(new NodeVersion("test-version")));
+                    new TableStatisticsWriter(new NodeVersion("test-version")),
+                    noopMetadataCache);
             assertThat(icebergMetadata.schemaExists(SESSION, namespace)).as("icebergMetadata.schemaExists(namespace)")
                     .isFalse();
             assertThat(icebergMetadata.schemaExists(SESSION, schema)).as("icebergMetadata.schemaExists(schema)")
