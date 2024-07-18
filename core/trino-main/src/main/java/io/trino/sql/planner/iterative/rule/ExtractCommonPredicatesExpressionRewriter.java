@@ -13,8 +13,10 @@
  */
 package io.trino.sql.planner.iterative.rule;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import io.trino.sql.ir.Expression;
 import io.trino.sql.ir.ExpressionRewriter;
@@ -22,16 +24,20 @@ import io.trino.sql.ir.ExpressionTreeRewriter;
 import io.trino.sql.ir.Logical;
 import io.trino.sql.planner.DeterminismEvaluator;
 
+import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.Multimaps.toMultimap;
 import static io.trino.sql.ir.IrUtils.combinePredicates;
 import static io.trino.sql.ir.IrUtils.extractPredicates;
 import static io.trino.sql.ir.Logical.Operator.OR;
 import static io.trino.sql.planner.DeterminismEvaluator.isDeterministic;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -80,30 +86,65 @@ public final class ExtractCommonPredicatesExpressionRewriter
             return simplified;
         }
 
+        /*
+         * Record usage of each expression by sub-predicates index
+         * Look for expression that are used by all sub-predicates if exists
+         * Else, use most commonly used predicates
+         */
+        private static Map.Entry<Collection<Integer>, Collection<Expression>> findMostCommonSubPredicates(List<List<Expression>> predicates)
+        {
+            Collection<Integer> allIndexes = IntStream.range(0, predicates.size()).boxed().collect(toImmutableList());
+
+            Multimap<Expression, Integer> usedByIndex = allIndexes.stream()
+                    .flatMap(i -> filterDeterministicPredicates(predicates.get(i)).stream()
+                            .map(predicate -> new AbstractMap.SimpleEntry<>(predicate, i)))
+                    .collect(toMultimap(Map.Entry::getKey, Map.Entry::getValue, HashMultimap::create));
+
+            Multimap<Collection<Integer>, Expression> indexesCommonPredicates = usedByIndex.asMap().entrySet().stream()
+                    .collect(toMultimap(Map.Entry::getValue, Map.Entry::getKey, HashMultimap::create));
+
+            if (indexesCommonPredicates.containsKey(allIndexes)) {
+                return new AbstractMap.SimpleEntry<>(allIndexes, indexesCommonPredicates.asMap().get(allIndexes));
+            }
+
+            return indexesCommonPredicates.asMap().entrySet().stream()
+                    .filter(entry -> entry.getKey().size() > 1) // at least shared by two sub-predicates
+                    .max(Comparator.comparingInt(entry -> entry.getKey().size() * entry.getValue().size()))
+                    .orElseGet(() -> new AbstractMap.SimpleEntry<>(ImmutableSet.of(), ImmutableSet.of()));
+        }
+
         private Expression extractCommonPredicates(Logical node)
         {
             List<List<Expression>> subPredicates = getSubPredicates(node);
 
-            Set<Expression> commonPredicates = ImmutableSet.copyOf(subPredicates.stream()
-                    .map(this::filterDeterministicPredicates)
-                    .reduce(Sets::intersection)
-                    .orElse(emptySet()));
+            Map.Entry<Collection<Integer>, Collection<Expression>> mostCommon = findMostCommonSubPredicates(subPredicates);
+            Collection<Integer> indexes = mostCommon.getKey();
+            Collection<Expression> commonPredicates = mostCommon.getValue();
 
-            List<List<Expression>> uncorrelatedSubPredicates = subPredicates.stream()
-                    .map(predicateList -> removeAll(predicateList, commonPredicates))
-                    .collect(toImmutableList());
+            if (indexes.isEmpty()) {
+                return node;
+            }
 
             Logical.Operator flippedOperator = node.operator().flip();
-
-            List<Expression> uncorrelatedPredicates = uncorrelatedSubPredicates.stream()
+            List<Expression> unusedPredicates = IntStream.range(0, subPredicates.size())
+                    .filter(i -> !indexes.contains(i))
+                    .boxed()
+                    .map(subPredicates::get)
                     .map(predicate -> combinePredicates(flippedOperator, predicate))
                     .collect(toImmutableList());
-            Expression combinedUncorrelatedPredicates = combinePredicates(node.operator(), uncorrelatedPredicates);
 
-            return combinePredicates(flippedOperator, ImmutableList.<Expression>builder()
+            List<Expression> uncorrelatedPredicates = indexes.stream()
+                    .map(subPredicates::get)
+                    .map(predicateList -> removeAll(predicateList, commonPredicates))
+                    .map(predicate -> combinePredicates(flippedOperator, predicate))
+                    .collect(toImmutableList());
+
+            Expression combined = combinePredicates(flippedOperator, ImmutableList.<Expression>builder()
                     .addAll(commonPredicates)
-                    .add(combinedUncorrelatedPredicates)
+                    .add(combinePredicates(node.operator(), uncorrelatedPredicates))
                     .build());
+
+            return combinePredicates(node.operator(), ImmutableList.<Expression>builder().add(combined).addAll(unusedPredicates).build());
         }
 
         private static List<List<Expression>> getSubPredicates(Logical expression)
@@ -166,7 +207,7 @@ public final class ExtractCommonPredicatesExpressionRewriter
                             .collect(toImmutableList()));
         }
 
-        private Set<Expression> filterDeterministicPredicates(List<Expression> predicates)
+        private static Set<Expression> filterDeterministicPredicates(List<Expression> predicates)
         {
             return predicates.stream()
                     .filter(DeterminismEvaluator::isDeterministic)

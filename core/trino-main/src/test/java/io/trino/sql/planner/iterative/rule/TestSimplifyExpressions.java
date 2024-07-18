@@ -26,6 +26,7 @@ import io.trino.sql.ir.Constant;
 import io.trino.sql.ir.Expression;
 import io.trino.sql.ir.ExpressionRewriter;
 import io.trino.sql.ir.ExpressionTreeRewriter;
+import io.trino.sql.ir.In;
 import io.trino.sql.ir.IrExpressions;
 import io.trino.sql.ir.Logical;
 import io.trino.sql.ir.Reference;
@@ -179,7 +180,7 @@ public class TestSimplifyExpressions
                 new Logical(AND, ImmutableList.of(new Logical(OR, ImmutableList.of(new Reference(BOOLEAN, "X"), new Reference(BOOLEAN, "V"))), new Logical(OR, ImmutableList.of(new Reference(BOOLEAN, "Z"), new Reference(BOOLEAN, "V"))))));
         assertSimplifies(
                 new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "X"), new Logical(OR, ImmutableList.of(new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "Y"), new Reference(BOOLEAN, "Z"))), new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "Y"), new Reference(BOOLEAN, "V"))), new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "Y"), new Reference(BOOLEAN, "X"))))))),
-                new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "X"), new Reference(BOOLEAN, "Y"), new Logical(OR, ImmutableList.of(new Reference(BOOLEAN, "Z"), new Reference(BOOLEAN, "V"), new Reference(BOOLEAN, "X"))))));
+                new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "X"), new Reference(BOOLEAN, "Y"))));
         assertSimplifies(
                 new Logical(OR, ImmutableList.of(new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "A"), new Reference(BOOLEAN, "B"), new Reference(BOOLEAN, "C"), new Reference(BOOLEAN, "D"))), new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "A"), new Reference(BOOLEAN, "B"), new Reference(BOOLEAN, "E"))), new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "A"), new Reference(BOOLEAN, "F"))))),
                 new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "A"), new Logical(OR, ImmutableList.of(new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "B"), new Reference(BOOLEAN, "C"), new Reference(BOOLEAN, "D"))), new Logical(AND, ImmutableList.of(new Reference(BOOLEAN, "B"), new Reference(BOOLEAN, "E"))), new Reference(BOOLEAN, "F"))))));
@@ -532,6 +533,32 @@ public class TestSimplifyExpressions
     {
         Expression simplified = normalize(rewrite(expression, TEST_SESSION, newOptimizer(PLANNER_CONTEXT)));
         assertThat(simplified).isEqualTo(normalize(expected));
+    }
+
+    @Test
+    public void testExtractPartialPredicates()
+    {
+        assertSimplifies(
+                new Logical(OR, ImmutableList.of(
+                        new Logical(AND, ImmutableList.of(
+                                new Comparison(EQUAL, new Reference(INTEGER, "x"), new Reference(INTEGER, "a")),
+                                new Comparison(EQUAL, new Reference(INTEGER, "y"), new Reference(INTEGER, "b")))),
+                        new Logical(AND, ImmutableList.of(
+                                new Comparison(EQUAL, new Reference(INTEGER, "x"), new Reference(INTEGER, "a")),
+                                new Comparison(EQUAL, new Reference(INTEGER, "y"), new Reference(INTEGER, "c")))),
+                        new Logical(AND, ImmutableList.of(
+                                new Comparison(EQUAL, new Reference(INTEGER, "x"), new Reference(INTEGER, "m")),
+                                new Comparison(EQUAL, new Reference(INTEGER, "y"), new Reference(INTEGER, "n")))))),
+                new Logical(AND, ImmutableList.of(
+                        new In(new Reference(INTEGER, "x"), ImmutableList.of(new Reference(INTEGER, "a"), new Reference(INTEGER, "m"))),
+                        new Logical(OR, ImmutableList.of(
+                                new Comparison(EQUAL, new Reference(INTEGER, "x"), new Reference(INTEGER, "a")),
+                                new Comparison(EQUAL, new Reference(INTEGER, "y"), new Reference(INTEGER, "n")))),
+                        new In(new Reference(INTEGER, "y"), ImmutableList.of(new Reference(INTEGER, "b"), new Reference(INTEGER, "c"), new Reference(INTEGER, "n"))),
+                        new Logical(OR, ImmutableList.of(
+                                new Comparison(EQUAL, new Reference(INTEGER, "x"), new Reference(INTEGER, "m")),
+                                new In(new Reference(INTEGER, "y"), ImmutableList.of(new Reference(INTEGER, "b"), new Reference(INTEGER, "c")))))
+                        )));
     }
 
     @Test
