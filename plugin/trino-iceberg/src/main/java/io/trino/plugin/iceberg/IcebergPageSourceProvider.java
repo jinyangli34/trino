@@ -912,7 +912,7 @@ public class IcebergPageSourceProvider
         ParquetDataSource dataSource = null;
         try {
             dataSource = createDataSource(inputFile, OptionalLong.of(fileSize), options, memoryContext, fileFormatDataSourceStats);
-            ParquetMetadata parquetMetadata = MetadataReader.readFooter(dataSource, Optional.empty());
+            ParquetMetadata parquetMetadata = MetadataReader.readFooter(dataSource, Optional.empty(), Optional.of(start), Optional.of(length));
             FileMetadata fileMetaData = parquetMetadata.getFileMetaData();
             MessageType fileSchema = fileMetaData.getSchema();
             if (nameMapping.isPresent() && !ParquetSchemaUtil.hasIds(fileSchema)) {
@@ -928,9 +928,10 @@ public class IcebergPageSourceProvider
                     .map(readerColumns -> (List<IcebergColumnHandle>) readerColumns.get().stream().map(IcebergColumnHandle.class::cast).collect(toImmutableList()))
                     .orElse(regularColumns);
 
-            List<org.apache.parquet.schema.Type> parquetFields = readBaseColumns.stream()
+            List<Optional<org.apache.parquet.schema.Type>> parquetFields = readBaseColumns.stream()
                     .map(column -> parquetIdToField.get(column.getId()))
-                    .collect(toList());
+                    .map(Optional::ofNullable)
+                    .collect(toImmutableList());
 
             MessageType requestedSchema = getMessageType(regularColumns, fileSchema.getName(), parquetIdToField);
             Map<List<String>, ColumnDescriptor> descriptorsByPath = getDescriptors(fileSchema, requestedSchema);
@@ -941,7 +942,7 @@ public class IcebergPageSourceProvider
                     start,
                     length,
                     dataSource,
-                    parquetMetadata.getBlocks(),
+                    parquetMetadata.getBlocks(descriptorsByPath.values()),
                     ImmutableList.of(parquetTupleDomain),
                     ImmutableList.of(parquetPredicate),
                     descriptorsByPath,
@@ -993,20 +994,20 @@ public class IcebergPageSourceProvider
                     pageSourceBuilder.addConstantColumn(nativeValueToBlock(column.getType(), utf8Slice(partitionData)));
                 }
                 else {
-                    org.apache.parquet.schema.Type parquetField = parquetFields.get(columnIndex);
+                    Optional<org.apache.parquet.schema.Type> parquetField = parquetFields.get(columnIndex);
                     Type trinoType = column.getBaseType();
-                    if (parquetField == null) {
+                    if (parquetField.isEmpty()) {
                         pageSourceBuilder.addNullColumn(trinoType);
                         continue;
                     }
                     // The top level columns are already mapped by name/id appropriately.
-                    ColumnIO columnIO = messageColumnIO.getChild(parquetField.getName());
+                    ColumnIO columnIO = messageColumnIO.getChild(parquetField.get().getName());
                     Optional<Field> field = IcebergParquetColumnIOConverter.constructField(new FieldContext(trinoType, column.getColumnIdentity()), columnIO);
                     if (field.isEmpty()) {
                         pageSourceBuilder.addNullColumn(trinoType);
                         continue;
                     }
-                    parquetColumnFieldsBuilder.add(new Column(parquetField.getName(), field.get()));
+                    parquetColumnFieldsBuilder.add(new Column(parquetField.get().getName(), field.get()));
                     pageSourceBuilder.addSourceColumn(parquetSourceChannel);
                     parquetSourceChannel++;
                 }
