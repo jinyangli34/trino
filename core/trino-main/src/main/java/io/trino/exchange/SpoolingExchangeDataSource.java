@@ -62,11 +62,15 @@ public class SpoolingExchangeDataSource
         }
 
         Slice data = exchangeSource.read();
-        memoryContext.setBytes(exchangeSource.getMemoryUsage());
 
-        // If the data source has been closed in a meantime reset memory usage back to 0
-        if (closed) {
-            memoryContext.setBytes(0);
+        // The data source is shared by all the drivers of a pipeline, while the memory context belongs to the
+        // operator context of a single driver. Once that driver is closed the operator context gets destroyed,
+        // and updating the memory context throws. Close always runs before the operator context is destroyed,
+        // so holding the monitor while updating the memory context makes the update safe.
+        synchronized (this) {
+            if (!closed) {
+                memoryContext.setBytes(exchangeSource.getMemoryUsage());
+            }
         }
 
         return data;
